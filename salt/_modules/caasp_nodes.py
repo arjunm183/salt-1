@@ -240,6 +240,9 @@ def get_replacement_for(target, replacement='', **kwargs):
     elif replacement_provided and replacement in forbidden:
         abort('%s cannot be replaced by %s: the replacement has a "ca" or "admin" role',
               target, replacement)
+    elif replacement_provided and replacement in excluded:
+        abort('%s cannot be replaced by %s: the replacement is in the list of nodes excluded',
+              target, replacement)
 
     masters = get_from_args_or_with_expr(
         'masters', kwargs, 'G@roles:kube-master')

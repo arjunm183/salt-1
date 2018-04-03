@@ -201,23 +201,33 @@ def get_etcdctl_args_str(**kwargs):
     return " ".join(get_etcdctl_args(**kwargs))
 
 
-def get_member_id():
+def get_member_id(**kwargs):
     '''
     Return the member ID (different from the node ID) for
-    this etcd member of the cluster.
+    a etcd member of the cluster.
+
+    Arguments:
+
+    * `nodename`: (optional) the nodename for the member we
+                  want the ID for. if no name is provided (or empty),
+                  the local node will be used.
     '''
     command = ["etcdctl"] + get_etcdctl_args() + ["member", "list"]
 
-    debug("getting etcd member ID with: %s", command)
+    nodename = kwargs.get('nodename', '')
+    if not nodename:
+        nodename = _get_this_name()
+
+    debug('getting "%s" etcd member ID with: %s', nodename, command)
     try:
-        this_url = 'https://{}:{}'.format(_get_this_name(), ETCD_CLIENT_PORT)
+        this_url = 'https://{}:{}'.format(nodename, ETCD_CLIENT_PORT)
         members_output = subprocess.check_output(command)
         for member_line in members_output.splitlines():
             if this_url in member_line:
                 return member_line.split(':')[0]
 
     except Exception as e:
-        error("cannot get member ID: %s", e)
-        error("output: %s", members_output)
+        error('cannot get member ID for "%s": %s', e, nodename)
+        error('output: %s', members_output)
 
     return ''
